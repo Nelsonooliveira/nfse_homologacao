@@ -1,0 +1,19 @@
+emitente:
+  cnpj: "12345678000195"
+  razao_social: "EMPRESA TESTE HOMOLOGACAO LTDA"
+  im: "123456"
+  codigo_municipio: "3550308"
+  optante_simples: false
+
+ambiente: 2 # 2 = Homologação
+
+# Para testar o envio contra uma API rodando no seu localhost,
+# basta descomentar as linhas abaixo e ajustar a porta/rota:
+# endpoint:
+#   base_url: "http://localhost:8080"
+#   recepcionar_lote: "/api/recepcionar-lote-rps"
+#   timeout_segundos: 10
+
+saida:
+  dir_xmls: "output/xmls"
+  dir_logs: "output/logs"

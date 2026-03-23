@@ -1,0 +1,19 @@
+# Ambientes Virtuais
+venv/
+env/
+.env/
+
+# Arquivos compilados do Python
+__pycache__/
+*.py[cod]
+
+# Pastas de saída (não queremos enviar XMLs gerados ou logs pro GitHub)
+output/
+
+# Certificados digitais (segurança)
+*.pfx
+*.p12
+
+# Configurações de IDEs (VSCode, PyCharm, etc)
+.vscode/
+.idea/
