@@ -13,22 +13,20 @@ from decimal import Decimal
 from lxml import etree
 
 
-# Namespaces do Portal Nacional
-NS_NFSE = "http://www.nfse.gov.br/NFSe/tipos"
-NS_LOTE = "http://www.nfse.gov.br/NFSe/recepcao"
+# Namespace principal da ABRASF
+NS_ABRASF = "http://www.abrasf.org.br/nfse"
 
 NSMAP = {
-    None: NS_LOTE,
-    "nfse": NS_NFSE,
+    None: NS_ABRASF,
     "xsi": "http://www.w3.org/2001/XMLSchema-instance",
 }
 
 
-def _ns(tag: str, namespace: str = NS_LOTE) -> str:
+def _ns(tag: str, namespace: str = NS_ABRASF) -> str:
     return f"{{{namespace}}}{tag}"
 
 
-def _text(parent: etree._Element, tag: str, value: str, ns: str = NS_LOTE) -> etree._Element:
+def _text(parent: etree._Element, tag: str, value: str, ns: str = NS_ABRASF) -> etree._Element:
     el = etree.SubElement(parent, _ns(tag, ns))
     el.text = str(value)
     return el
@@ -107,14 +105,20 @@ class NFSeBuilder:
     # ------------------------------------------------------------------
     def _build_envelope_lote(self) -> etree._Element:
         root = etree.Element(_ns("EnviarLoteRpsEnvio"), nsmap=NSMAP)
+        root.set(
+            "{http://www.w3.org/2001/XMLSchema-instance}schemaLocation",
+            "http://www.abrasf.org.br/nfse http://www.abrasf.org.br/nfse.xsd"
+        )
 
         lote = etree.SubElement(root, _ns("LoteRps"))
         lote.set("versao", "2.04")
         lote.set("Id", f"Lote{self.id_lote}")
 
         _text(lote, "NumeroLote", self.id_lote)
-        _text(lote, "CpfCnpj", self.cnpj_emitente)
-        _text(lote, "InscricaoMunicipal", self.emitente.get("im", "000000"))
+        cpf_cnpj_lote = etree.SubElement(lote, _ns("CpfCnpj"))
+        cpf_cnpj_lote.set("id", "E1")
+        _text(cpf_cnpj_lote, "Cnpj", self.cnpj_emitente)
+        _text(lote, "InscricaoMunicipal", self.emitente.get("im", "12345678"))
         _text(lote, "QuantidadeRps", "1")
 
         lista_rps = etree.SubElement(lote, _ns("ListaRps"))
@@ -133,6 +137,7 @@ class NFSeBuilder:
         # -- Identificação do RPS --
         self._build_identificacao_rps(info)
 
+        _text(info, "DataEmissao", self.competencia.strftime("%Y-%m-%d"))
         _text(info, "Competencia", self.competencia.strftime("%Y-%m-%d"))
         _text(info, "TipoAmbiente", str(self.tp_amb))  # 2 = Homologação
 
@@ -189,14 +194,16 @@ class NFSeBuilder:
     def _build_prestador(self, parent: etree._Element) -> None:
         prestador = etree.SubElement(parent, _ns("Prestador"))
         cpf_cnpj = etree.SubElement(prestador, _ns("CpfCnpj"))
+        cpf_cnpj.set("id", "E2")
         _text(cpf_cnpj, "Cnpj", self.cnpj_emitente)
-        _text(prestador, "InscricaoMunicipal", self.emitente.get("im", "000000"))
+        _text(prestador, "InscricaoMunicipal", self.emitente.get("im", "12345678"))
 
     def _build_tomador(self, parent: etree._Element) -> None:
         tomador = etree.SubElement(parent, _ns("TomadorServico"))
 
         ident = etree.SubElement(tomador, _ns("IdentificacaoTomador"))
         cpf_cnpj = etree.SubElement(ident, _ns("CpfCnpj"))
+        cpf_cnpj.set("id", "E3")
 
         if len(self.tomador_doc) == 11:
             _text(cpf_cnpj, "Cpf", self.tomador_doc)
